@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>webpack</title>
+</head>
+
+<body>
+  <div id="root">
+    <div id="root"></div>
+  </div>
+  <script src="../utils/three.min.js"></script>
+  <script>
+    class Artwork {
+      static getInstance() {
+        if (!Artwork.instance) {
+          Artwork.instance = new Artwork();
+          return Artwork.instance
+        }
+        return Artwork.instance;
+      }
+      constructor() {
+        this.scene
+        this.camera
+        this.renderer
+        this.point
+      }
+      init() {
+        this.point = new THREE.PointLight(0xffffff);
+        this.point.position.set(0, 300, -300);
+        this.scene = new THREE.Scene();
+        this.scene.add(this.point);
+        this.scene.fog = new THREE.Fog(0xf7d9aa, 0, 350);
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        this.camera.position.z = 100;
+        this.camera.position.y = 200;
+        this.renderer = new THREE.WebGLRenderer();
+        this.renderer.setClearColor(0x68c3c0, 1.0)
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(this.renderer.domElement);
+      }
+      run(updata) {
+        const { _animate, scene, camera, renderer } = this;
+        function animate() {
+          requestAnimationFrame(animate);
+          updata && updata()
+          renderer.render(scene, camera);
+        }
+        animate()
+      }
+    }
+    class BaseObject {
+      constructor() {
+        this.geometry = null;
+        this.material = null;
+        this.mesh = null;
+      }
+    }
+    class Land extends BaseObject {
+      init() {
+        this.geometry = new THREE.CylinderGeometry(150, 150, 100, 30, 10);
+        this.geometry.applyMatrix4(new THREE.Matrix4().makeRotationX(-Math.PI / 2));
+        this.material = new THREE.MeshPhongMaterial({
+          color: '#8BFFB8',
+          flatShading: THREE.FlatShading,
+        });
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh.receiveShadow = true;
+      }
+      animate() {
+        this.mesh.rotation.z += .003
+      }
+    }
+    class Sun extends BaseObject {
+      init() {
+        this.geometry = new THREE.SphereGeometry(400, 20, 20);
+        this.material = new THREE.MeshPhongMaterial({
+          color: 0xedeb27,
+          shading: THREE.FlatShading,
+        });
+        this.mesh = new THREE.Mesh(this.geometry, this.material);
+        this.mesh.castShadow = false;
+        this.mesh.receiveShadow = false;
+        this.mesh.position.set(0, -100, -850);
+      }
+
+    }
+    class plane extends BaseObject {
+      constructor() {
+
+      }
+      init() { }
+    }
+    class Cloud extends BaseObject {
+      init() {
+        this.mesh = new THREE.Object3D();
+        const geometry = new THREE.DodecahedronGeometry(20, 0);
+        const material = new THREE.MeshPhongMaterial({
+          color: 0xd8d0d1,
+        });
+
+        const nums = 3 + Math.floor(Math.random() * 3);
+
+        for (let i = 0; i < nums; i++) {
+          var m = new THREE.Mesh(geometry, material);
+          m.position.x = i * 15;
+          m.position.y = Math.random() * 10;
+          m.position.z = Math.random() * 10;
+          m.rotation.z = Math.random() * Math.PI * 2;
+          m.rotation.y = Math.random() * Math.PI * 2;
+
+          const s = .6 + Math.random() * .6;
+          m.scale.set(s, s, s);
+          this.mesh.add(m);
+        }
+      }
+    }
+    class Sky extends BaseObject {
+      init() {
+        this.group = new THREE.Group();
+        const nClouds = 20;
+        for (let i = 0; i < nClouds; i++) {
+          var cloud = new Cloud();
+          cloud.init();
+          const stepAngle = Math.PI * 2 / nClouds;
+          var angle = stepAngle * i + (Math.random() * stepAngle);
+          const height = 200 + Math.random() * 100
+          cloud.mesh.position.x = Math.sin(angle) * height
+          cloud.mesh.position.y = Math.cos(angle) * height
+          cloud.mesh.position.z = -100 - Math.random() * 20
+          cloud.mesh.rotation.z = Math.PI - angle 
+          var s = 0.5 + Math.random() * 0.5;
+          cloud.mesh.scale.set(s, s, s);
+          this.group.add(cloud.mesh);
+        }
+      }
+      animate() {
+        this.group.rotation.z += .001
+      }
+    }
+    class Tree extends BaseObject {
+      
+    }
+
+  </script>
+  <script>
+    const animation = Artwork.getInstance();
+    animation.init()
+
+    // 天空
+    const sky = new Sky();
+    sky.init();
+    animation.scene.add(sky.group);
+
+    // 加入小岛
+    const land = new Land();
+    land.init();
+    animation.scene.add(land.mesh);
+
+    // 太阳
+    const sun = new Sun();
+    sun.init();
+    animation.scene.add(sun.mesh);
+
+    animation.run(() => {
+      // cube.animate()
+      land.animate()
+      sky.animate()
+    })
+  </script>
+</body>
+
+</html>
