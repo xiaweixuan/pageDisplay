@@ -5,8 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
-  <script src="../../utils//TweenMax.2.1.2.min.js"></script>
-  <script src="../../utils//ScrollMagic.2.0.6.min.js"></script>
+  <script src="../../utils/TweenMax.2.1.2.min.js"></script>
+  <script src="../../utils/ScrollMagic.2.0.6.min.js"></script>
   <script src="../../utils/animation.jsap.js"></script>
   <style>
     body {
@@ -25,7 +25,7 @@
       height: 100vh;
       position: relative;
       box-sizing: border-box;
-
+      overflow: hidden;
       scroll-snap-align: center;
     }
 
@@ -34,14 +34,6 @@
       width: 30%;
       margin-top: 17%;
       position: absolute;
-
-      span {
-        width: 100%;
-        background: red;
-        display: block;
-        height: 5px;
-        margin-top: 20px;
-      }
     }
 
     section img {
@@ -80,8 +72,19 @@
 </head>
 
 <body>
+  <!--
+    在绑定了tiggerElement元素后，检测滚动，当滚动到tiggerElement元素上边框贴到屏幕上方时，触发操作
+    ScrollMagic 会为tiggerElement包裹一层div，并将tiggerElement设置为fixed
+    在计算出我们所需要的滚动长度是，将 长度+tiggerElement的高 赋给外层div
+    实际滚动时，是滚动外层的div，而tiggerElement始终固定不变
+    在设定的滚动长度全部结束后，，解除tiggerElement的fixed
+  -->
+  <div class="占位" style="height: 500px;position: relative;">
+    <span>假装有一些什么</span>
+    <span style="position: absolute;bottom: 0;left: 0;">假装还有一些什么</span>
+  </div>
   <section id="PC1">
-    <blockquote>一个标题<span></span></blockquote><br></br>
+    <blockquote>一个标题</blockquote><br />
     <div style="position:relative; left:40px; top:450px;">
       写点啥
       <br />
@@ -104,8 +107,7 @@
   </section>
   <script>
     window.onload = function () {
-      let tl1 = new TimelineMax({ onUpdate: updatePercentage });
-      let tl2 = new TimelineMax();
+      let tl1 = new TimelineMax();
       const controller = new ScrollMagic.Controller();
 
       tl1.from('#PC1 blockquote', .5, { x: 200, opacity: 0 });
@@ -113,28 +115,18 @@
       tl1.from('#PC1 .pcside', 1, { x: -200, opacity: 0, ease: Power4.easeInOut }, '=-1');
       tl1.from('#PC1 .pcfront', 1, { x: 200, opacity: 0, ease: Power4.easeInOut }, '=-.7');
 
-      tl2.from('#PC1 .box', 1, { opacity: 0, scale: 0 });
-      tl2.to('#PC1 .box', .5, { left: '20%', scale: 1.3, borderColor: 'white', borderWidth: 12, boxShadow: '1px 1px 0px 0px rgba(0,0,0,0.09)' });
+      tl1.from('#PC1 .box', 1, { opacity: 0, scale: 0 }, '=-2');
+      tl1.to('#PC1 .box', .5, { left: '20%', scale: 1.3, borderColor: 'white', borderWidth: 12, boxShadow: '1px 1px 0px 0px rgba(0,0,0,0.09)' });
 
-      const scene = new ScrollMagic.Scene({
+      new ScrollMagic.Scene({
         triggerElement: '#PC1',
+        // offset: 300,
         triggerHook: 'onLeave',
         duration: '100%',
       })
         .setPin('#PC1')
         .setTween(tl1)
         .addTo(controller);
-
-      const scene2 = new ScrollMagic.Scene({
-        triggerElement: '#PC1 blockquote',
-      })
-        .setTween(tl2)
-        .addTo(controller);
-
-
-      function updatePercentage() {
-        tl1.progress();
-      }
     };
   </script>
 </body>
